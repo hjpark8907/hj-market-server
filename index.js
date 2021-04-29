@@ -14,6 +14,7 @@ const upload = multer({
     })
 });
 
+const detectProduct = require("./helpers/detectProduct");
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
@@ -66,22 +67,19 @@ app.post("/products", (req, res) => {
     if (!name || !description || !price || !seller || !imageUrl) {
         res.status(400).send("All field should be write!!")
     }
-    models.Product.create({
-        name,
-        description,
-        price,
-        seller,
-        imageUrl,
-    }).then((result) => {
-        console.log("Product Creation result : ", result);
-        res.send({
-            result,
-        });
-    }).catch((error) => {
-        console.error(error);
-        res.status(400).send("Problems happen when products is uploading!")
+    detectProduct(imageUrl, (type) => {
+        models.Product.create({ description, price, seller, imageUrl, name, type })
+            .then((result) => {
+                console.log("Product Creation result : ", result);
+                res.send({
+                    result,
+                });
+            }).catch((error) => {
+                console.error(error);
+                res.status(400).send("Problems happen when products is uploading!")
+            })
     })
-})
+});
 
 app.get("/products/:id", (req, res) => {
     const params = req.params;
